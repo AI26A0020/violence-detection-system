@@ -1,0 +1,90 @@
+# ============================================================
+#  Violence Detection System - File cấu hình trung tâm
+# ============================================================
+
+# --- Nguồn video ---
+source:
+  # Có thể là: số (0 = webcam), đường dẫn file, hoặc URL RTSP/HTTP
+  default: "rtsp://admin:L290844B@192.168.0.103:554/cam/realmonitor?channel=1&subtype=0"
+  # Đa camera: thêm nhiều nguồn vào đây (chạy song song)
+  multi:
+    - label: "Cam1-Sangsang"
+      url: "rtsp://admin:L290844B@192.168.0.103:554/cam/realmonitor?channel=1&subtype=0"
+    # - label: "Cam2-Kho"
+    #   url: "rtsp://admin:password@192.168.0.104:554/stream"
+
+# --- Model AI ---
+model:
+  seq_model_path: "modelnew.h5"
+  input_size: 128 # Kích thước ảnh đầu vào (pixel)
+  sequence_length: 10 # Số frame dùng để phân tích 1 lần
+
+# --- Phát hiện ---
+detection:
+  confidence_threshold: 75.0 # % tối thiểu để tính là "Violence" (0-100)
+  cooldown_seconds: 30 # Thời gian chờ giữa 2 lần thông báo (giây)
+
+# --- Ghi video output ---
+recording:
+  enabled: true
+  output_filename: "rtsp_record.mp4"
+  fps_fallback: 25.0 # FPS mặc định nếu stream không báo FPS
+
+# --- Snapshot (chụp ảnh khi phát hiện bạo lực) ---
+snapshot:
+  enabled: true
+  folder: "snapshots"
+
+# --- Ghi Log ---
+logging:
+  enabled: true
+  log_file: "detection_log.csv" # Ghi log dạng CSV
+  json_log_file: "detection_log.json"
+
+# --- Thông báo Discord ---
+discord:
+  enabled: true # Đặt true khi đã cấu hình webhook_url
+  webhook_url: "https://discord.com/api/webhooks/1548670744408367145/Orasj2g47LTFsx7Z2v0Q7E4Cs6sj-1zfRA6hYAqV8fxG4Dl9w-Q1ZXsoz55z-GB8pRi-"
+  mention_role_id: "" # ID role cần tag (để trống nếu không cần)
+  # Ví dụ: mention_role_id: "123456789012345678"
+
+# --- Thông báo Telegram ---
+telegram:
+  enabled: false # Đặt true khi đã cấu hình
+  bot_token: "YOUR_BOT_TOKEN"
+  chat_id: "YOUR_CHAT_ID"
+
+# --- Hiển thị cửa sổ ---
+display:
+  window_width: 800
+  window_height: 450
+  show_fps: true
+  show_stats: true # Hiện thống kê (alert count, uptime)
+  show_mini_graph: true # Hiện biểu đồ confidence nhỏ (cuối màn hình)
+
+# --- Phát hiện người (YOLOv8) ---
+person_detection:
+  enabled: true
+  model: "yolov8n.pt"         # Tự download ~6MB lần đầu chạy
+  confidence: 0.18            # Ngưỡng tin cậy detect người chuẩn xác (nhận diện tốt CCTV góc xa/tối)
+  detect_every_n_frames: 2    # Detect mỗi N frame (giảm tải CPU)
+  # "always" = luôn hiện box | "violence_only" = chỉ hiện khi Violence
+  show_boxes: "always"
+
+# --- Phân tích chuyển động (Optical Flow) ---
+motion_analysis:
+  enabled: true
+  # Ngưỡng motion score (pixel/frame trung bình trong bbox người)
+  # Thấp = nhạy hơn, cao = ít false positive hơn
+  fighting_motion_threshold: 3.0
+  # Scale thu nhỏ frame trước khi tính flow
+  # 0.5 = chất lượng cao nhưng 74ms/frame (chỉ ~14fps)
+  # 0.25 = cân bằng, 15ms/frame (~66fps) ← khuyến nghị
+  # 0.125 = siêu nhanh 4ms/frame, ít chi tiết hơn
+  flow_scale: 0.25
+  # Chỉ tính optical flow mỗi N frame (giảm tải CPU thêm nữa)
+  flow_skip_frames: 2
+  # Hiện heatmap chuyển động bên dưới video
+  show_heatmap: false
+  heatmap_alpha: 0.30
+
